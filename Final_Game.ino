@@ -12,12 +12,16 @@ const int buttonPin2 = 5;
 const int switchPin = 7;
 bool firstRound = 1;
 bool gameFlag = 0;
+bool setupBool = 1;
+bool switchCheck = 0;
+bool timeoutStarted = 0;
 volatile bool button1Flag = 0;
 volatile bool button2Flag = 0;
 volatile bool switchFlag = 0;
 AsyncDelay levelTimer;
 AsyncDelay SecondTimer;
 AsyncDelay startTimer;
+AsyncDelay startTimeout;
 
 void setup() {
   // put your setup code here, to run once:
@@ -100,16 +104,73 @@ int findAngleLED() {
 
 void loop() {
   if(!gameFlag) {
-//    Serial.println("Running !switchFlag Loop");
-    for(int i = 0; i <= 9; i++) {
-      CircuitPlayground.setPixelColor(i, 0, 0, 150);
+    // Run blue run at startup ##########################################################################
+    if(setupBool) {
+      for(int i = 0; i <= 9; i++) {
+        CircuitPlayground.setPixelColor(i, 0, 0, 150);
+        delay(50);
+      }
+      for(int i = 0; i <= 9; i++) {
+        CircuitPlayground.setPixelColor(i, 0, 0, 0);
+        delay(50);
+      }
+      setupBool = 0;
+    }
+    // Menu Animation ####################################################################################
+    int randomLEDMenu = random(0, 9);
+    int randomBlue = random(0, 25);
+    int randomRed = random(0, 25);
+    int randomGreen = random(0, 25);
+    for(int i = 0; i < 7; i++) {
+      CircuitPlayground.setPixelColor(randomLEDMenu, randomRed*i, randomGreen*i, randomBlue*i);
+      delay(25);
+    } for(int i = 7; i >= 0; i--) {
+      CircuitPlayground.setPixelColor(randomLEDMenu, randomRed*i, randomGreen*i, randomBlue*i);
+      delay(25);
+    }
+
+    // Illuminate Player Movement Chouce ##################################################################
+    if(switchCheck) {
+      if(switchFlag) {
+        for(int i = 0; i <= 3; i++) {
+          for(int i = 0; i <= 9; i++) {
+            CircuitPlayground.setPixelColor(i, 128, 0, 128);
+          }
+          delay(250);
+          CircuitPlayground.clearPixels();
+          delay(250);
+        }
+      } else {
+        for(int i = 0; i <= 3; i++) {
+          for(int i = 0; i <= 9; i++) {
+            CircuitPlayground.setPixelColor(i, 255, 165, 0);
+          }
+          delay(250);
+          CircuitPlayground.clearPixels();
+          delay(250);
+        }
+      }
+      switchCheck = 0;
     }
   }
+  // Start game if both buttons have been pressed ###################################
   if(button1Flag && button2Flag) {
     gameFlag = 1;
     button1Flag = 0;
     button2Flag = 0;
+  } if (button1Flag || button2Flag) {
+    if(!timeoutStarted) {
+      startTimeout.start(2000, AsyncDelay::MILLIS);
+      timeoutStarted = 1;
+    }
+  } if(startTimeout.isExpired() && timeoutStarted == 1) {
+    button1Flag = 0;
+    button2Flag = 0;
+    timeoutStarted = 0;
+    Serial.println("TIMOUT!!");
   }
+  // #########################################################################################################
+  // Play Game ###############################################################################################
   if(gameFlag) {
     // Setup First Round ##########################################
     if(roundCounter == 0) {
@@ -125,9 +186,14 @@ void loop() {
       score = 0;
     }
 
-    // Set player Position White ##########################################
-    CircuitPlayground.setPixelColor(playerPos, 255, 255, 255);
-
+    // Set player Position Orange/White ##########################################
+      if(playerPos == playerGoal) {
+        CircuitPlayground.setPixelColor(playerPos, 255, 100, 0);
+        Serial.println("Set Goal");
+      } else {
+        CircuitPlayground.setPixelColor(playerPos, 255, 255, 255);
+        Serial.println("Set Normal");
+      }
     // Angle Movement #####################################################
     if(!switchFlag) {
       bool returnGoal;
@@ -213,7 +279,19 @@ void loop() {
           CircuitPlayground.setPixelColor(i, 150, 150, 0);
           delay(100);
         }
+        if(score == 10) {
+          delay(200);
+          for(int i = 0; i < 3; i++) {
+            CircuitPlayground.clearPixels();
+            delay(500);
+            for(int i = 0; i <=9; i++) {
+              CircuitPlayground.setPixelColor(i, 150, 150, 0);
+            }
+            delay(500);
+          }
+        }
         delay(3000);
+        setupBool = 1;
         // Otherwise ##########################################
       } else {
         for(int i = 0; i < 3; i++) {
@@ -262,6 +340,9 @@ void button2Press() {
 }
 
 void switchFlip() {
-  switchFlag = !switchFlag;
-  Serial.println("Running Switch Flip");
+  if(!gameFlag) {
+    switchFlag = !switchFlag;
+    switchCheck = 1;
+    Serial.println("Running Switch Flip");
+  }
 }
