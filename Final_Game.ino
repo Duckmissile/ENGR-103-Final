@@ -117,19 +117,16 @@ void loop() {
       setupBool = 0;
     }
     // Menu Animation ####################################################################################
-    int randomLEDMenu = random(0, 9);
+    int randomLEDMenu = random(10);
     int randomBlue = random(0, 25);
     int randomRed = random(0, 25);
     int randomGreen = random(0, 25);
     for(int i = 0; i < 7; i++) {
       CircuitPlayground.setPixelColor(randomLEDMenu, randomRed*i, randomGreen*i, randomBlue*i);
       delay(25);
-    } for(int i = 7; i >= 0; i--) {
-      CircuitPlayground.setPixelColor(randomLEDMenu, randomRed*i, randomGreen*i, randomBlue*i);
-      delay(25);
     }
 
-    // Illuminate Player Movement Chouce ##################################################################
+    // Illuminate Player Movement Choice ##################################################################
     if(switchCheck) {
       if(switchFlag) {
         for(int i = 0; i <= 3; i++) {
@@ -175,6 +172,10 @@ void loop() {
     // Setup First Round ##########################################
     if(roundCounter == 0) {
       Serial.println("Running Initial Round");
+      for(int i = 9; i >= 0; i--) {
+        CircuitPlayground.setPixelColor(i, 0, 0, 0);
+        delay(50);
+      }
       timer = 7000;
       CircuitPlayground.clearPixels();
       playerGoal = random(0, 9);
@@ -189,10 +190,10 @@ void loop() {
     // Set player Position Orange/White ##########################################
       if(playerPos == playerGoal) {
         CircuitPlayground.setPixelColor(playerPos, 255, 100, 0);
-        Serial.println("Set Goal");
+//        Serial.println("Set Goal");
       } else {
         CircuitPlayground.setPixelColor(playerPos, 255, 255, 255);
-        Serial.println("Set Normal");
+//        Serial.println("Set Normal");
       }
     // Angle Movement #####################################################
     if(!switchFlag) {
@@ -341,8 +342,10 @@ void button2Press() {
 
 void switchFlip() {
   if(!gameFlag) {
-    switchFlag = !switchFlag;
-    switchCheck = 1;
+    if(!switchCheck){
+      switchFlag = !switchFlag;
+      switchCheck = 1;
+    }
     Serial.println("Running Switch Flip");
   }
 }
