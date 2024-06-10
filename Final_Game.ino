@@ -320,7 +320,7 @@ void loop() {
     // End of Timer Check
     }
     if(SecondTimer.isExpired()) {
-//      CircuitPlayground.playTone(440, 100);
+      CircuitPlayground.playTone(440, 100);
       SecondTimer.repeat();
     }
   // End of GAME loop
